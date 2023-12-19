@@ -1,0 +1,19 @@
+service: sms-to-slack
+
+provider:
+    name: aws
+    region: ap-northeast-1
+
+plugins:
+    - ./vendor/bref/bref
+
+functions:
+    sms-receive:
+        handler: sms-to-slack.php
+        description: 'sms-to-slack'
+        runtime: php-81
+
+# Exclude files from deployment
+package:
+    patterns:
+        - '!tests/**'

@@ -13,6 +13,10 @@ https://www.instructables.com/two-ways-to-reset-arduino-in-software/
 #include <WioLTEforArduino.h>
 WioLTE Wio;
 
+char phoneNo[100];
+int dbm;
+int status;
+
 void(* resetFunc) (void) = 0;
 void setup() {
   String message = "";
@@ -41,13 +45,12 @@ void setup() {
   delay(3000);
 
   CONSOLE.println("### Get phone number.");
-  char str[100];
-  if (Wio.GetPhoneNumber(str, sizeof (str)) <= 0) {
+  if (Wio.GetPhoneNumber(phoneNo, sizeof (phoneNo)) <= 0) {
     CONSOLE.println("### ERROR! ###");
     resetFunc();  //call reset
     return;
   }
-  CONSOLE.println(str);
+  CONSOLE.println(phoneNo);
 
   CONSOLE.println("### Connecting to \"soracom.io\".");
   if (! Wio.Activate("soracom.io", "sora", "sora")) {
@@ -55,6 +58,15 @@ void setup() {
     resetFunc();  //call reset
     return;
   }
+
+  CONSOLE.println("### Sync Time.");
+  if (! Wio.SyncTime("ntp.nict.jp")) {
+    CONSOLE.println("### ERROR! ###");
+  }
+  
+  CONSOLE.println("### Get dbm.");
+  dbm = Wio.GetReceivedSignalStrength();
+  CONSOLE.println(dbm);
 
   //SET SMS PDU Mode
   CONSOLE.println("> AT+CMGF=1");
@@ -69,6 +81,10 @@ void setup() {
 
 void loop() {
   String message = "";
+
+  CONSOLE.println("### Get dbm.");
+  dbm = Wio.GetReceivedSignalStrength();
+  CONSOLE.println(dbm);
 
   //SMS Check
   CONSOLE.println("### SMS Check.");
@@ -90,7 +106,6 @@ void loop() {
 
     SerialUSB.print(jsonString.c_str());
 
-    int status;
     if (!Wio.HttpPost("http://funk.soracom.io", jsonString.c_str(), &status)) {
       SerialUSB.println("### ERROR! ###");
       resetFunc();  //call reset
@@ -112,6 +127,17 @@ void loop() {
   }
   else {
     CONSOLE.println("### No Found SMS.");
+
+    String post = "[" + String(phoneNo) + "] no sms . dbm:" + String(dbm);
+
+    CONSOLE.println(post.c_str());
+    if (!Wio.HttpPost("http://funk.soracom.io", post.c_str(), &status)) {
+      SerialUSB.println("### ERROR! ###");
+      resetFunc();  //call reset
+    }
+    SerialUSB.print("### Status:");
+    SerialUSB.println(status);
+
   }
 
   delay(30000);

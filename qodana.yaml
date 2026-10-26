@@ -2,9 +2,9 @@
 # WARNING: Do not store sensitive information in this file, as its contents will be included in the Qodana report. #
 ####################################################################################################################
 
+# profile / 除外 / ライセンス規則は Qodana Cloud のグローバル構成で管理する。
+# ここにはこのリポ固有の設定だけを書く。
 version: "1.0"
+
+# linter はグローバル構成より先に決まるため、リポ側にも必須 (無いと qodana-js が自動選択される)
 linter: qodana-php
-profile:
-  name: qodana.recommended
-include:
-  - name: CheckDependencyLicenses

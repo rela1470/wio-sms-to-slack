@@ -1,8 +1,18 @@
-service: sms-to-slack
+# SERVICE_NAME で既存のスタック名・関数名に合わせられる (例: SERVICE_NAME=my-sms npx osls deploy)
+service: ${env:SERVICE_NAME, 'sms-to-slack'}
 
 provider:
     name: aws
     region: ap-northeast-1
+    iam:
+        role:
+            statements:
+                - Effect: Allow
+                  Action:
+                      - secretsmanager:GetSecretValue
+                  Resource:
+                      # Secrets Manager の ARN は末尾に -RANDOMID が付くので prefix で許可
+                      - arn:aws:secretsmanager:${self:provider.region}:${aws:accountId}:secret:${self:service}-*
 
 plugins:
     - ./vendor/bref/bref
@@ -11,9 +21,22 @@ functions:
     sms-receive:
         handler: sms-to-slack.php
         description: 'sms-to-slack'
-        runtime: php-81
+        runtime: php-85
+        environment:
+            # SLACK_TOKEN / SLACK_CHANNEL_ID はこの名前の Secret (JSON) から読む
+            SECRETS_MANAGER_NAME: ${self:service}
 
 # Exclude files from deployment
 package:
     patterns:
         - '!tests/**'
+        - '!test.php'
+        - '!.env'
+        - '!.env.*'
+        - '!.env_sample'
+        - '!.idea/**'
+        - '!arduino/**'
+        - '!node_modules/**'
+        - '!*.md'
+        - '!package.json'
+        - '!package-lock.json'

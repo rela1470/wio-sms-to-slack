@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "scripts": {
+    "deploy": "osls deploy"
+  },
+  "devDependencies": {
+    "osls": "^4.4.0"
+  }
+}

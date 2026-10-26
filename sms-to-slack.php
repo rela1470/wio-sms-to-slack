@@ -13,27 +13,25 @@ require __DIR__ . '/vendor/autoload.php';
 306630593068
 O
 
+ * SMS には多要素認証のコードなどが入るため、本文・電話番号・event はログに出さない
+ * Slack に送れなかったときは例外のまま投げる (Funk がエラーを返し、デバイスは SMS を消さずに再送する)
  */
 return function ($event) {
-    try{
-
-        error_log('*** event ***');
-        error_log(json_encode($event));
-
-        error_log('*** convertSMS ***');
-        $smsArray = Util::convertATEvent($event);
-
-        foreach ($smsArray as $sms) {
-            $slack = new Slack(Env::get('SLACK_TOKEN'));
-            $slack->sendMessage(Env::get('SLACK_CHANNEL_ID'), 'SMS Received!', $slack->createBlockKit($sms));
-        }
-
-    } catch (Exception $e) {
-        error_log('[ERROR]' . $e->getMessage());
-        http_response_code( 500 );
-        exit;
+    $smsArray = Util::convertATEvent(is_array($event) ? $event : []);
+    if (! $smsArray) {
+        error_log('[sms] no sms');
+        return 'OK';
     }
 
-    error_log('*** Done! ***');
+    $token = Env::get('SLACK_TOKEN');
+    $channelId = Env::get('SLACK_CHANNEL_ID');
+    if (! $token || ! $channelId) throw new \RuntimeException('SLACK_TOKEN / SLACK_CHANNEL_ID is not set');
+
+    $slack = new Slack($token);
+    foreach ($smsArray as $sms) {
+        $slack->sendMessage($channelId, 'SMS Received!', $slack->createBlockKit($sms));
+    }
+
+    error_log('[sms] sent ' . count($smsArray));
     return 'OK';
 };

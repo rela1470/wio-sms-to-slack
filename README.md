@@ -23,10 +23,11 @@
 
 ## Require Software
 * AWS Lambda
-* [Bref 2.0](https://bref.sh/)
-  * include PHP 8.1
-  * include [serverless framework v3](https://www.serverless.com/)
-    * include nodejs14.x
+* AWS Secrets Manager (`SLACK_TOKEN` / `SLACK_CHANNEL_ID`)
+* [Bref 3](https://bref.sh/)
+  * include PHP 8.5
+  * include [osls](https://github.com/oss-serverless/serverless) 4.x (Serverless Framework v3 fork)
+    * include Node.js `^20.19.0 || ^22.13.0 || >=24`
 
 # Sample
 ## SMS Receive
@@ -63,9 +64,8 @@ array (
 # How To
 
 ## Setup Server
-* serverless CLI install
-  * https://www.serverless.com/
-* PHP 8.1 install
+* Node.js install (osls)
+* PHP 8.5 install
   * https://www.php.net/
 * Composer install
   * https://getcomposer.org/
@@ -81,14 +81,24 @@ array (
 ## Deploy Server
 ```shell
 composer install
-cp -a .env_sample .env
-vi .env
+npm install
 
-## setup slack env
 ## aws login
 
-serverless deploy
+## Secrets Manager に Secret を作る (名前はサービス名と同じ。値は JSON)
+## {"SLACK_TOKEN": "xoxb-...", "SLACK_CHANNEL_ID": "C..."}
+aws secretsmanager create-secret --name sms-to-slack --secret-string file://secret.json
+rm secret.json
+
+npx osls deploy
+## 既存のスタック名・関数名に合わせる場合
+## SERVICE_NAME=<service> npx osls deploy
 ```
+
+* `.env` is for local use only and is not included in the Lambda package.
+* `.env` はローカル確認用です。Lambda のパッケージには含めません (`cp -a .env_sample .env`)。
+* The SMS body, phone number and event are not written to the logs (SMS may contain one-time passwords).
+* SMS の本文・電話番号・event はログに出しません (ワンタイムパスワードが含まれることがあるため)。
 
 ## (optional) Setup SORACOM Funk
 * connect device to aws lambda

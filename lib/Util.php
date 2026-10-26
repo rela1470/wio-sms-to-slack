@@ -10,27 +10,23 @@ class Util {
      */
     public static function convertATEvent(array $data): array
     {
-        if (! $data || ! $data['message'] ?? false) throw new Exception('json error');
+        // SMS が無いときにデバイスから届く死活通知などは message を持たない
+        if (! is_string($data['message'] ?? null)) return [];
 
         $dataLineArray = explode("\r\n", $data['message']);
 
         $smsArray = [];
         for ($i = 0; $i < count($dataLineArray); $i ++) {
             if (str_contains($dataLineArray[$i], '+CMGR:')) {
-                error_log('*** SMS convert ***');
-                error_log($dataLineArray[$i]);
-
-                $header = str_getcsv($dataLineArray[$i]);
+                $header = str_getcsv($dataLineArray[$i], ',', '"', '');
+                $body = $dataLineArray[$i + 1] ?? '';
                 $smsArray[] = [
-                    'phone' => $header[1],
-                    'date' => Util::convertATDate($header[3]),
-                    'text' => Util::convertUCS2($dataLineArray[$i + 1]),
+                    'phone' => $header[1] ?? '',
+                    'date' => Util::convertATDate($header[3] ?? ''),
+                    'text' => Util::convertUCS2($body),
                     'origin_header' => json_encode($dataLineArray[$i]),
-                    'origin_text' => $dataLineArray[$i + 1],
+                    'origin_text' => $body,
                 ];
-
-                error_log('*** SMS convert result ***');
-                error_log(json_encode($smsArray));
             }
         }
         return $smsArray;
@@ -44,6 +40,7 @@ class Util {
     public static function convertATDate(string $date) : string
     {
         $dateTime = \DateTime::createFromFormat('y/m/d,H:i:s+?', $date);
+        if (! $dateTime) return $date;
 
         //TODO SORACOMは日本時間でズレないので不要
         //$timezone = explode('+', $date);

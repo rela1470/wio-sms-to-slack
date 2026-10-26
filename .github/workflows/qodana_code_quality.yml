@@ -11,18 +11,20 @@ jobs:
   qodana:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       pull-requests: write
       checks: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}  # to check out the actual pull request commit, not the merge commit
           fetch-depth: 0  # a full history is required for pull request analysis
       - name: 'Qodana Scan'
-        uses: JetBrains/qodana-action@v2026.1
+        uses: JetBrains/qodana-action@3e8d76ff0e0241618abd808682f426afe84bab3f # v2026.2.2 (グローバル構成の failureConditions.dependencyLicenses に 2026.2 以上が必要)
         with:
           pr-mode: false
+          # SARIF (ライセンス監査結果を含む) を Actions の artifact にも残す。Qodana Cloud にログインせず gh で確認できるように
+          upload-result: true
         env:
           QODANA_TOKEN: ${{ secrets.QODANA_TOKEN_1491304798 }}
           QODANA_ENDPOINT: 'https://qodana.cloud'

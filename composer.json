@@ -1,6 +1,8 @@
 {
+    "license": "proprietary",
     "require": {
         "php": "^8.5",
+        "ext-mbstring": "*",
         "bref/bref": "^3.0",
         "vlucas/phpdotenv": "^5.5",
         "guzzlehttp/guzzle": "^7.5",

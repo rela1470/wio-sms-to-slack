@@ -2,7 +2,7 @@
 # WARNING: Do not store sensitive information in this file, as its contents will be included in the Qodana report. #
 ####################################################################################################################
 
-# profile / 除外 / ライセンス規則は Qodana Cloud のグローバル構成 (Kyash/corpit-qodana) で管理する。
+# profile / 除外 / ライセンス規則は Qodana Cloud のグローバル構成で管理する。
 # ここにはこのリポ固有の設定だけを書く。
 version: "1.0"
 
